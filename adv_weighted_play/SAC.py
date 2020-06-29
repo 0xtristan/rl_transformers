@@ -37,7 +37,7 @@ class SAC_model():
         self.create_networks(obs_dim, act_dim, hidden_sizes)
         self.replay_buffer = replay_buffer
         self.CQL  = True
-        self.AWAC = True
+        self.AWAC = False
 
 
         torch.set_num_threads(torch.get_num_threads())
@@ -190,7 +190,7 @@ class SAC_model():
 
         # Finally, update target networks by polyak averaging.
         self.polyak_target_update()
-        return loss_q, q_pi
+        return loss_q, loss_pi, q_pi
 
     def supervised_update(self, data, supervised_loss,  use_RL=True):
         # First run one gradient descent step for Q1 and Q2

@@ -88,7 +88,7 @@ class HERReplayBuffer:
 
 
     # pass in an encoder if we desired reencoding of our representation learning trajectories.
-    def store_hindsight_episode(self, episode, encoder = None):
+    def store_hindsight_episode(self, episode, store_original_transition=False, n_sampled_goal=None):
         # ok, our episode comes in as a sequence of obs, acts. But we also want the actual rewards.
         # So really what we want is a sequence of transitions. Is that how we want to collect our episodes?
 
@@ -100,6 +100,8 @@ class HERReplayBuffer:
         # when representation learning, we store o, z, d_g. from o,a,r,o2,d,z
         # remember, neural net inference is cheap, so maybe we can encode on the fly?
 
+        if n_sampled_goal is None:
+            n_sampled_goal = self.n_sampled_goal # allows user control over the amount of sampled goals
 
         for transition_idx, transition in enumerate(episode):
 
@@ -108,14 +110,15 @@ class HERReplayBuffer:
             o = np.concatenate([o['observation'], o['desired_goal']])
             o2 = np.concatenate([o2['observation'], o2['desired_goal']])
 
-            #self.store(o, a, r, o2, d) # already done in the rollout loop
+            if store_original_transition:
+                self.store(o, a, r, o2, d) # already done in the rollout loop
 
             if transition_idx == len(episode)-1:
                 selection_strategy = 'final'
             else:
                 selection_strategy = self.goal_selection_strategy
 
-            sampled_achieved_goals = [self.sample_achieved(episode, transition_idx, selection_strategy) for _ in range(self.n_sampled_goal)]
+            sampled_achieved_goals = [self.sample_achieved(episode, transition_idx, selection_strategy) for _ in range(n_sampled_goal)]
 
 
             for goal in sampled_achieved_goals:

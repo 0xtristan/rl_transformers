@@ -23,8 +23,8 @@ def step(obs, acts, policy, batch_size):
     indexes = np.random.choice(obs.shape[0], batch_size)
     obs, acts = obs[indexes, :], acts[indexes, :]
     mu, _, distrib = policy(obs)
-    loss = ((acts - mu) ** 2).mean()
-    #loss = -distrib.log_prob(acts).mean()
+    #loss = ((acts - mu) ** 2).mean()
+    loss = -distrib.log_prob(acts).mean()
     return loss
 
 def train_step(train_obs, train_acts, optimizer, policy, summary_writer=None, steps=None, batch_size = 512):
@@ -32,12 +32,14 @@ def train_step(train_obs, train_acts, optimizer, policy, summary_writer=None, st
     loss = step(train_obs, train_acts, policy, batch_size)
     loss.backward()
     optimizer.step()
-    summary_writer.add_scalar('BC_MSE_loss', loss, steps)
+    if summary_writer is not None:
+        summary_writer.add_scalar('BC_MSE_loss', loss, steps)
     return loss
 
-def test_step(test_obs, test_acts, policy, summary_writer, steps, batch_size = 512):
+def test_step(test_obs, test_acts, policy, summary_writer=None, steps=None, batch_size = 512):
     loss = step(test_obs, test_acts, policy, batch_size)
-    summary_writer.add_scalar('BC_MSE_loss', loss, steps)
+    if summary_writer is not None:
+        summary_writer.add_scalar('BC_MSE_loss', loss, steps)
     return loss
 
 def find_supervised_loss(obs, acts, optimizer, policy, summary_writer, steps, batch_size=512):
